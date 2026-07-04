@@ -1,0 +1,60 @@
+name: speech-provider-espeak
+summary: eSpeak-NG Speech Provider
+description: |
+  This is a Spiel speech provider that features the very capable eSpeak-NG engine.
+version: '0.1'
+grade: devel
+confinement: strict
+base: core24
+
+slots:
+  speech-provider:
+    interface: dbus
+    bus: session
+    name: org.espeak.Speech.Provider
+
+apps:
+  speech-provider-espeak:
+    command: usr/local/bin/speech-provider-espeak
+    environment:
+      ESPEAK_DATA_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/espeak-ng-data
+      LD_LIBRARY_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/pulseaudio:$LD_LIBRARY_PATH
+    plugs:
+      - audio-playback
+      - pulseaudio
+    slots:
+      - speech-provider
+
+parts:
+  libspeechprovider:
+    plugin: meson
+    source: https://github.com/project-spiel/libspeechprovider.git
+    source-type: git
+    source-tag: SPEECHPROVIDER_1_0_3
+    meson-parameters:
+      - --prefix=/usr
+    build-packages:
+      - build-essential
+      - meson
+      - ninja-build
+      - pkg-config
+      - libglib2.0-dev
+      - libgirepository1.0-dev
+      - python3-tap
+      - gi-docgen
+
+  speech-provider-espeak:
+    plugin: meson
+    source: https://github.com/project-spiel/speech-provider-espeak.git
+    source-type: git
+    source-tag: SPEECH_PROVIDER_ESPEAK_0_1_0
+    after: [libspeechprovider]
+    build-packages:
+      - rustc
+      - cargo
+      - libclang-dev
+      - libespeak-ng-dev
+    stage-packages:
+      - espeak-ng-data
+      - libespeak-ng1
+      - libpulse0
