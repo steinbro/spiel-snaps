@@ -5,7 +5,7 @@ description: |
 version: '0.1'
 grade: devel
 confinement: strict
-base: core24
+base: core26
 
 slots:
   speech-provider:
@@ -16,6 +16,9 @@ slots:
 apps:
   speech-provider-espeak:
     command: usr/local/bin/speech-provider-espeak
+    daemon: simple
+    daemon-scope: user
+    activates-on: [speech-provider]
     environment:
       ESPEAK_DATA_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/espeak-ng-data
       LD_LIBRARY_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/pulseaudio:$LD_LIBRARY_PATH

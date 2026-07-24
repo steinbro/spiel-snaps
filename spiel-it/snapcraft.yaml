@@ -30,6 +30,7 @@ parts:
     source-type: git
     override-prime: |
       craftctl default
+      # Custom launcher script to set PYTHONPATH and run the app with the correct Python interpreter
       mkdir -p "$CRAFT_PRIME/bin"
       cat > "$CRAFT_PRIME/bin/run-spiel-it" <<'EOF'
       #!/bin/sh
@@ -38,6 +39,7 @@ parts:
       EOF
       chmod +x "$CRAFT_PRIME/bin/run-spiel-it"
     override-build: |
+      # Patch the source code to use the correct path for the app data directory in the snap environment
       sed -i "/^import sys$/a import os" $CRAFT_PART_SRC/spiel-it.py.in
       sed -i \
         "s|app = SpielItApp('@app_data_dir@')|app = SpielItApp(os.path.join(os.environ['SNAP'], '@app_data_dir@'.lstrip('/')))|" \
