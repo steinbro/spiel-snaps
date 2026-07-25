@@ -13,7 +13,7 @@ slots:
     content: piper-voices
     source:
       read:
-        - /
+        - /en-US.amy-medium
 
 parts:
   voices-en-us-amy-medium:
@@ -23,9 +23,10 @@ parts:
       - ca-certificates
     override-build: |
       set -eu
+      mkdir -p "$CRAFT_PART_INSTALL/en-US.amy-medium"
       curl -L --fail --retry 3 \
-        -o "$CRAFT_PART_INSTALL/en_US-amy-medium.onnx" \
+        -o "$CRAFT_PART_INSTALL/en-US.amy-medium/en_US-amy-medium.onnx" \
         "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx"
       curl -L --fail --retry 3 \
-        -o "$CRAFT_PART_INSTALL/en_US-amy-medium.onnx.json" \
+        -o "$CRAFT_PART_INSTALL/en-US.amy-medium/en_US-amy-medium.onnx.json" \
         "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx.json"

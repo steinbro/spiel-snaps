@@ -13,7 +13,7 @@ slots:
     content: piper-voices
     source:
       read:
-        - /
+        - /pt-BR.cadu-medium
 
 parts:
   voices-pt-br-cadu-medium:
@@ -23,9 +23,10 @@ parts:
       - ca-certificates
     override-build: |
       set -eu
+      mkdir -p "$CRAFT_PART_INSTALL/pt-BR.cadu-medium"
       curl -L --fail --retry 3 \
-        -o "$CRAFT_PART_INSTALL/pt_BR-cadu-medium.onnx" \
+        -o "$CRAFT_PART_INSTALL/pt-BR.cadu-medium/pt_BR-cadu-medium.onnx" \
         "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/cadu/medium/pt_BR-cadu-medium.onnx"
       curl -L --fail --retry 3 \
-        -o "$CRAFT_PART_INSTALL/pt_BR-cadu-medium.onnx.json" \
+        -o "$CRAFT_PART_INSTALL/pt-BR.cadu-medium/pt_BR-cadu-medium.onnx.json" \
         "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/cadu/medium/pt_BR-cadu-medium.onnx.json"
