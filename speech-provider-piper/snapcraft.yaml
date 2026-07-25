@@ -18,7 +18,6 @@ plugs:
     interface: content
     content: piper-voices
     target: $SNAP/voices
-    #default-provider: speech-provider-piper-voices-en-us-amy-medium
 
 apps:
   speech-provider-piper:
@@ -31,7 +30,7 @@ apps:
       LD_LIBRARY_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/pulseaudio:$LD_LIBRARY_PATH
     plugs:
       - audio-playback
-      - pulseaudio
+      - pulseaudio  #XXX not necessary?
       - piper-voices
     slots:
       - speech-provider
@@ -60,9 +59,25 @@ parts:
     source-type: git
     source-tag: SPEECH_PROVIDER_PIPER_0_1_0
     after: [libspeechprovider]
+    build-snaps:
+      - rustup
+    build-packages:
+      - cmake
+      - libclang-dev
+      - libespeak-ng-dev
+    stage-packages:
+      # Piper requires espeak-ng-data for phoneme generation
+      - espeak-ng-data
+      - libespeak-ng1
+      - libpulse0
+    build-environment:
+      - USE_SYSTEM_ESPEAK: "1"
     meson-parameters:
+      # Populated at runtime by content snaps
+      # Must match target in plugs.piper-voices.plug
       - -Dvoices_dir=/snap/$SNAPCRAFT_PROJECT_NAME/current/voices/
     override-build: |
+      # Some dependencies (e.g. sonata) require a nightly rust toolchain
       export RUSTUP_TOOLCHAIN=nightly-2024-08-15
       unset RUSTFLAGS
       unset CARGO_ENCODED_RUSTFLAGS
@@ -71,15 +86,3 @@ parts:
       rustc --version
       cargo --version
       craftctl default
-    build-environment:
-      - USE_SYSTEM_ESPEAK: "1"
-    build-snaps:
-      - rustup
-    build-packages:
-      - cmake
-      - libclang-dev
-      - libespeak-ng-dev
-    stage-packages:
-      - espeak-ng-data
-      - libespeak-ng1
-      - libpulse0
