@@ -19,7 +19,7 @@ $ sudo snap install --devmode --dangerous orca-spiel_50.2-dev_amd64.snap
 orca-spiel 50.2-dev installed
 
 # Connect espeak speech provider to orca
-$ sudo snap connect orca-spiel:speech-provider speech-provider-espeak:speech-provider
+$ sudo snap connect orca-spiel:speech-provider-espeak speech-provider-espeak:speech-provider
 
 # Confirm the orca snap can see the speech provider
 $ orca-spiel.spiel -P

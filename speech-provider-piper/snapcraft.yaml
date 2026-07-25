@@ -28,6 +28,13 @@ apps:
     slots:
       - speech-provider
 
+components:
+  voices-en-us-amy-medium:
+    type: standard
+    summary: US English voice for Piper
+    description: US English voice for Piper
+    version: '0.1'
+
 parts:
   libspeechprovider:
     plugin: meson
@@ -52,6 +59,8 @@ parts:
     source-type: git
     source-tag: SPEECH_PROVIDER_PIPER_0_1_0
     after: [libspeechprovider]
+    meson-parameters:
+      - -Dvoices_dir=/snap/$SNAPCRAFT_PROJECT_NAME/components/mnt/voices-en-us-amy-medium/
     override-build: |
       export RUSTUP_TOOLCHAIN=nightly-2024-08-15
       unset RUSTFLAGS
@@ -73,3 +82,26 @@ parts:
       - espeak-ng-data
       - libespeak-ng1
       - libpulse0
+
+  voices-en-us-amy-medium:
+    # This is too large to clone in its entirety
+    #plugin: dump
+    #source: https://huggingface.co/rhasspy/piper-voices
+    #source-type: git
+    #source-depth: 1
+    plugin: nil
+    build-packages:
+      - curl
+      - ca-certificates
+    override-build: |
+      set -eu
+      mkdir -p "$CRAFT_PART_INSTALL/en_US-amy-medium"
+      curl -L --fail --retry 3 \
+        -o "$CRAFT_PART_INSTALL/en_US-amy-medium/en_US-amy-medium.onnx" \
+        "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx"
+      curl -L --fail --retry 3 \
+        -o "$CRAFT_PART_INSTALL/en_US-amy-medium/en_US-amy-medium.onnx.json" \
+        "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx.json"
+    organize:
+      en_US-amy-medium/en_US-amy-medium.onnx: (component/voices-en-us-amy-medium)/en_US-amy-medium.onnx
+      en_US-amy-medium/en_US-amy-medium.onnx.json: (component/voices-en-us-amy-medium)/en_US-amy-medium.onnx.json

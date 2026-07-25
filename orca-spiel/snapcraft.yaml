@@ -14,7 +14,11 @@ grade: devel
 confinement: devmode
 
 plugs:
-  speech-provider:
+  speech-provider-piper:
+    interface: dbus
+    bus: session
+    name: ai.piper.Speech.Provider
+  speech-provider-espeak:
     interface: dbus
     bus: session
     name: org.espeak.Speech.Provider
@@ -33,7 +37,8 @@ apps:
     plugs:
       - audio-playback
       - pulseaudio
-      - speech-provider
+      - speech-provider-piper
+      - speech-provider-espeak
   spiel:
     command: usr/bin/spiel
     environment:
@@ -46,7 +51,8 @@ apps:
     plugs:
       - audio-playback
       - pulseaudio
-      - speech-provider
+      - speech-provider-piper
+      - speech-provider-espeak
 
 parts:
   orca:
