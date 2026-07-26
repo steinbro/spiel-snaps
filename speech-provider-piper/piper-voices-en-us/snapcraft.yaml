@@ -1,4 +1,4 @@
-name: speech-provider-piper-voices-en-us
+name: piper-voices-en-us
 summary: Piper voices content snap (en_US)
 description: |
   Content snap that provides the Piper en_US voice model files.

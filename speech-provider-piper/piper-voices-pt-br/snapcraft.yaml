@@ -1,4 +1,4 @@
-name: speech-provider-piper-voices-pt-br
+name: piper-voices-pt-br
 summary: Piper voices content snap (pt_BR)
 description: |
   Content snap that provides the Piper pt_BR voice model files.

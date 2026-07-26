@@ -1,7 +1,8 @@
 #!/bin/bash -x
 #
 # Basic regression test for the spiel snaps and their slots/plugs.
-# This is not a comprehensive test, but it does verify that the snaps can be installed and run on a fresh system.
+# Assumes that the orca-spiel, speech-provider-piper, and piper-voices-en-us
+# snaps have been built and are available in their respective directories.
 #
 # 1. Set up a fresh resolute container.
 # 2. Perform minimal configuration of snapd and dbus.
@@ -9,7 +10,8 @@
 # 4. Connect the snaps' slots and plugs.
 # 5. Verify that the spiel binary reports one provider and one voice.
 #
-C=spiel-snap-test
+C=spiel-snap-test  # Name of the test container
+set -euo pipefail  # Exit on error, unset variable, or failed pipe
 
 # Remove any existing container and create a new one
 lxc delete $C --force || true
@@ -31,15 +33,17 @@ lxc exec $C -- loginctl enable-linger 0
 lxc exec $C -- systemctl start user@0.service
 
 # Install snaps for orca, piper, and a voice
-lxc file push orca-spiel/orca-spiel_*.snap $C/root/
+lxc file push \
+  orca-spiel/orca-spiel_*.snap \
+  speech-provider-piper/speech-provider-piper_*.snap \
+  speech-provider-piper/piper-voices-en-us/piper-voices-en-us_*.snap \
+  $C/root/
 lxc exec $C -- bash -c "snap install /root/orca-spiel_*.snap --dangerous --devmode"
-lxc file push speech-provider-piper/speech-provider-piper_*.snap $C/root/
 lxc exec $C -- bash -c "snap install /root/speech-provider-piper_*.snap --dangerous"
-lxc file push speech-provider-piper-voices-en-us/speech-provider-piper-voices-en-us_*.snap $C/root/
-lxc exec $C -- bash -c "snap install /root/speech-provider-piper-voices-en-us_*.snap --dangerous"
+lxc exec $C -- bash -c "snap install /root/piper-voices-en-us_*.snap --dangerous"
 
 # Connect voice to piper, and piper to orca
-lxc exec $C -- snap connect speech-provider-piper:piper-voices speech-provider-piper-voices-en-us:piper-voices
+lxc exec $C -- snap connect speech-provider-piper:piper-voices piper-voices-en-us:piper-voices
 lxc exec $C -- snap connect orca-spiel:speech-provider-piper speech-provider-piper:speech-provider
 
 # spiel binary should show one provider and one voice
