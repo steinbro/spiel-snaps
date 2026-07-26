@@ -25,13 +25,14 @@ plugs:
 
 apps:
   orca:
-    command: usr/bin/orca
+    command: bin/orca-launch
     environment:
       LD_LIBRARY_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/pulseaudio:$LD_LIBRARY_PATH
       PULSE_SERVER: unix:$XDG_RUNTIME_DIR/../pulse/native
       PYTHONPATH: $SNAP/usr/lib/python3/dist-packages
       XDG_DATA_DIRS: $SNAP/usr/share:$XDG_DATA_DIRS
       GSETTINGS_SCHEMA_DIR: $SNAP/usr/share/glib-2.0/schemas
+      GI_TYPELIB_PATH: $SNAP/usr/lib/x86_64-linux-gnu/girepository-1.0:$SNAP/usr/lib/girepository-1.0
       GST_PLUGIN_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/gstreamer-1.0
       GST_PLUGIN_SYSTEM_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/gstreamer-1.0
     plugs:
@@ -55,6 +56,16 @@ apps:
       - speech-provider-espeak
 
 parts:
+  orca-launcher:
+    plugin: nil
+    override-build: |
+      install -d "$CRAFT_PART_INSTALL/bin"
+      cat > "$CRAFT_PART_INSTALL/bin/orca-launch" << 'EOF'
+      #!/bin/sh
+      exec "$SNAP/usr/bin/python3" "$SNAP/usr/bin/orca" "$@"
+      EOF
+      chmod 0755 "$CRAFT_PART_INSTALL/bin/orca-launch"
+
   orca:
     plugin: meson
     source: https://gitlab.gnome.org/GNOME/orca.git
@@ -87,6 +98,11 @@ parts:
     stage-packages:
       - at-spi2-core
       - dconf-gsettings-backend
+      - gir1.2-atk-1.0
+      - gir1.2-atspi-2.0
+      - gir1.2-gdkpixbuf-2.0
+      - gir1.2-gtk-3.0
+      - gir1.2-wnck-3.0
       - gsettings-desktop-schemas
       - gstreamer1.0-plugins-base
       - gstreamer1.0-plugins-good
@@ -102,6 +118,7 @@ parts:
       - python3-dbusmock
       - python3-gi
       - python3-gi-cairo
+      - x11-xkb-utils
     override-build: |
       craftctl default
       sed -i '1s|^#!/.*python3$|#!/usr/bin/python3|' "$CRAFT_PART_INSTALL/usr/bin/orca"
