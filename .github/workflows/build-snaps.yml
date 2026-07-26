@@ -1,0 +1,64 @@
+name: Build Snaps
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  discover-snaps:
+    name: Discover snap projects
+    runs-on: ubuntu-latest
+    outputs:
+      snap_dirs: ${{ steps.discover.outputs.snap_dirs }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Discover directories with snapcraft.yaml
+        id: discover
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -t dirs < <(find . -name snapcraft.yaml -not -path './.git/*' -printf '%h\n' | sed 's#^\./##' | sort -u)
+
+          if [[ ${#dirs[@]} -eq 0 ]]; then
+            echo 'No snapcraft.yaml files found.'
+            exit 1
+          fi
+
+          json=$(printf '%s\n' "${dirs[@]}" | jq -R . | jq -cs .)
+          echo "snap_dirs=$json" >> "$GITHUB_OUTPUT"
+
+          echo 'Discovered snap projects:'
+          printf ' - %s\n' "${dirs[@]}"
+
+  build:
+    name: Build ${{ matrix.snap_dir }}
+    needs: discover-snaps
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        snap_dir: ${{ fromJson(needs.discover-snaps.outputs.snap_dirs) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build snap
+        id: build
+        uses: snapcore/action-build@v1
+        with:
+          path: ${{ matrix.snap_dir }}
+
+      - name: Upload snap artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.snap_dir }}-snap
+          path: ${{ steps.build.outputs.snap }}
+          if-no-files-found: error
