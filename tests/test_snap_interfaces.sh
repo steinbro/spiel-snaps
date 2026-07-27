@@ -5,7 +5,7 @@
 # snaps have been built and are available in their respective directories.
 #
 # 1. Set up a fresh resolute container.
-# 2. Perform minimal configuration of snapd and dbus.
+# 2. Perform minimal configuration of snapd, dbus, and pulseaudio.
 # 3. Install the orca, piper, and voice snaps.
 # 4. Connect the snaps' slots and plugs.
 # 5. Verify that the spiel binary reports one provider and one voice.
@@ -32,6 +32,18 @@ lxc exec $C -- loginctl enable-linger 0
 # Boot the systemd user instance for root
 lxc exec $C -- systemctl start user@0.service
 
+# Expose host audio to container root at /run/user/0/pulse/native.
+lxc exec $C -- bash -c "mkdir -p /run/user/0/pulse /root/.config/pulse && chmod 0700 /run/user/0"
+HOST_PULSE_COOKIE="${XDG_CONFIG_HOME:-$HOME/.config}/pulse/cookie"
+lxc config device add $C pulse-native proxy \
+  listen=unix:/run/user/0/pulse/native \
+  connect=unix:/run/user/$(id -u)/pulse/native \
+  bind=container \
+  uid=0 \
+  gid=0 \
+  mode=0600 || true
+lxc file push "$HOST_PULSE_COOKIE" "$C/root/.config/pulse/cookie"
+
 # Install snaps for orca, piper, and a voice
 lxc file push \
   orca-spiel/orca-spiel_*.snap \
@@ -48,10 +60,15 @@ lxc exec $C -- snap connect orca-spiel:speech-provider-piper speech-provider-pip
 
 # spiel binary should show one provider and one voice
 lxc exec $C -- env \
-  XDG_RUNTIME_DIR=/run/user/0 \
+  XDG_RUNTIME_DIR=/run/user/0/snap.orca-spiel \
   DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/0/bus \
   orca-spiel.spiel -P
 lxc exec $C -- env \
-  XDG_RUNTIME_DIR=/run/user/0 \
+  XDG_RUNTIME_DIR=/run/user/0/snap.orca-spiel \
   DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/0/bus \
   orca-spiel.spiel -V
+# Say something
+lxc exec $C -- env \
+  XDG_RUNTIME_DIR=/run/user/0/snap.orca-spiel \
+  DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/0/bus \
+  orca-spiel.spiel "Hello, world!"
