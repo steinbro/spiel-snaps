@@ -26,13 +26,13 @@ lxc exec $C -- snap set system experimental.user-daemons=true
 
 # Install dbus
 lxc exec $C -- apt update
-lxc exec $C -- apt install -y dbus-x11
+lxc exec $C -- apt install -y dbus-x11 make
 # Tell systemd to keep user 0's session active permanently
 lxc exec $C -- loginctl enable-linger 0
 # Boot the systemd user instance for root
 lxc exec $C -- systemctl start user@0.service
 
-# Expose host audio to container root at /run/user/0/pulse/native.
+# Expose host audio to container
 lxc exec $C -- bash -c "mkdir -p /run/user/0/pulse /root/.config/pulse && chmod 0700 /run/user/0"
 HOST_PULSE_COOKIE="${XDG_CONFIG_HOME:-$HOME/.config}/pulse/cookie"
 lxc config device add $C pulse-native proxy \
@@ -44,26 +44,14 @@ lxc config device add $C pulse-native proxy \
   mode=0600 || true
 lxc file push "$HOST_PULSE_COOKIE" "$C/root/.config/pulse/cookie"
 
-# Install snaps for orca, piper, and a voice
-lxc file push output/snaps/*.snap $C/root/
-lxc exec $C -- bash -c "snap install /root/orca-spiel_*.snap --dangerous --devmode"
-lxc exec $C -- bash -c "snap install /root/speech-provider-piper_*.snap --dangerous"
-lxc exec $C -- bash -c "snap install /root/piper-voices-*.snap --dangerous"
-
-# Connect some voice packs to piper, and piper to orca
-lxc exec $C -- snap connect speech-provider-piper:piper-voices piper-voices-en-us:piper-voices
-lxc exec $C -- snap connect speech-provider-piper:piper-voices piper-voices-es-mx:piper-voices
-lxc exec $C -- snap connect orca-spiel:speech-provider-piper speech-provider-piper:speech-provider
-
 # Environment variables needed for spiel to find the dbus and pulseaudio sockets
 lxc exec $C -- bash -c "printf '%s\n' \
   'export XDG_RUNTIME_DIR=/run/user/0/snap.orca-spiel' \
   'export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/0/bus' \
   > /etc/profile.d/spiel-env.sh"
 
-# spiel binary should show one provider and one voice
-lxc exec $C -- bash -lc 'orca-spiel.spiel -P'
-lxc exec $C -- bash -lc 'orca-spiel.spiel -V'
-# Say something
-lxc exec $C -- bash -lc 'orca-spiel.spiel -l en-us "Hello, world!"'
-lxc exec $C -- bash -lc 'orca-spiel.spiel -l es-MX "¡Hola, mundo!"'
+# Run Makefile targets in the container
+lxc file push --recursive Makefile output $C/root
+lxc exec $C -- bash -lc "make install"
+lxc exec $C -- bash -lc "make connect"
+lxc exec $C -- bash -lc "make speak"
