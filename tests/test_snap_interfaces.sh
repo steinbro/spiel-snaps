@@ -58,17 +58,14 @@ lxc exec $C -- bash -c "snap install /root/piper-voices-en-us_*.snap --dangerous
 lxc exec $C -- snap connect speech-provider-piper:piper-voices piper-voices-en-us:piper-voices
 lxc exec $C -- snap connect orca-spiel:speech-provider-piper speech-provider-piper:speech-provider
 
+# Environment variables needed for spiel to find the dbus and pulseaudio sockets
+lxc exec $C -- bash -c 'cat > /etc/profile.d/spiel-env.sh <<"EOF"
+export XDG_RUNTIME_DIR=/run/user/0/snap.orca-spiel
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/0/bus
+EOF'
+
 # spiel binary should show one provider and one voice
-lxc exec $C -- env \
-  XDG_RUNTIME_DIR=/run/user/0/snap.orca-spiel \
-  DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/0/bus \
-  orca-spiel.spiel -P
-lxc exec $C -- env \
-  XDG_RUNTIME_DIR=/run/user/0/snap.orca-spiel \
-  DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/0/bus \
-  orca-spiel.spiel -V
+lxc exec $C -- bash -lc 'orca-spiel.spiel -P'
+lxc exec $C -- bash -lc 'orca-spiel.spiel -V'
 # Say something
-lxc exec $C -- env \
-  XDG_RUNTIME_DIR=/run/user/0/snap.orca-spiel \
-  DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/0/bus \
-  orca-spiel.spiel "Hello, world!"
+lxc exec $C -- bash -lc 'orca-spiel.spiel "Hello, world!"'
