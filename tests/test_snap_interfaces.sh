@@ -49,11 +49,11 @@ lxc file push "$HOST_PULSE_COOKIE" "$C/root/.config/pulse/cookie"
 lxc file push \
   orca-spiel/orca-spiel_*.snap \
   speech-provider-piper/speech-provider-piper_*.snap \
-  speech-provider-piper/voices/piper-voices-${LANG}/*.snap \
+  speech-provider-piper/voices/**/*.snap \
   $C/root/
 lxc exec $C -- bash -c "snap install /root/orca-spiel_*.snap --dangerous --devmode"
 lxc exec $C -- bash -c "snap install /root/speech-provider-piper_*.snap --dangerous"
-lxc exec $C -- bash -c "snap install /root/piper-voices-${LANG}_*.snap --dangerous"
+lxc exec $C -- bash -c "snap install /root/piper-voices-*.snap --dangerous"
 
 # Connect voice to piper, and piper to orca
 lxc exec $C -- snap connect speech-provider-piper:piper-voices piper-voices-${LANG}:piper-voices

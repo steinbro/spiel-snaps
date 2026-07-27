@@ -1,23 +1,23 @@
-# Snaps for speech providers and voices
-## espeak
-### 1. Build the espeak speech provider
-```bash
-$ cd speech-provider-espeak
-$ snapcraft pack
-Packed speech-provider-espeak_0.1_amd64.snap
+# Snaps for Spiel speech providers and voices
 
-### Speech providers require user-daemons feature flag in snapd
+To build all the snaps:
+```bash
+make snaps
+```
+Once that's done, use the instructions below to install and configure the snaps.
+
+## espeak
+### 1. Install the espeak speech provider
+```bash
+# Speech providers require user-daemons feature flag in snapd
 $ sudo snap set system experimental.user-daemons=true
-$ sudo snap install --dangerous speech-provider-espeak_0.1_amd64.snap
+$ sudo snap install --dangerous speech-provider-espeak/*.snap
 speech-provider-espeak 0.1 installed
 ```
 
-### 2. Build spiel-enabled orca
+### 2. Install spiel-enabled orca
 ```bash
-$ cd orca-spiel
-$ snapcraft pack
-Packed orca-spiel_50.2-dev_amd64.snap
-$ sudo snap install --devmode --dangerous orca-spiel_50.2-dev_amd64.snap
+$ sudo snap install --devmode --dangerous orca-spiel/*.snap
 orca-spiel 50.2-dev installed
 ```
 
@@ -38,16 +38,13 @@ $ orca-spiel.spiel "Hello world"
 
 Because piper voices are much larger than espeak's, they are packaged as content snaps that are built and installed separately.
 
-### 1. Build the Piper speech provider
+### 1. Install the Piper speech provider
 ```bash
-$ cd speech-provider-piper
-$ snapcraft pack
-$ snapcraft install --dangerous *.snap
+$ snapcraft install --dangerous speech-provider-piper/*.snap
 ```
-### 2. Build a language pack
+### 2. Install a language pack
 ```bash
-$ cd speech-provider-piper/piper-voices-en-us
-$ snapcraft pack
+$ cd speech-provider-piper/voices/piper-voices-en-us
 $ snapcraft install --dangerous *.snap
 ```
 ### 3. Connect orca to piper and a voice 
