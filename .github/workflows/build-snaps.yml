@@ -12,7 +12,7 @@ jobs:
     name: Discover snap projects
     runs-on: ubuntu-latest
     outputs:
-      snap_dirs: ${{ steps.discover.outputs.snap_dirs }}
+      snap_projects: ${{ steps.discover.outputs.snap_projects }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,20 +30,22 @@ jobs:
             exit 1
           fi
 
-          json=$(printf '%s\n' "${dirs[@]}" | jq -R . | jq -cs .)
-          echo "snap_dirs=$json" >> "$GITHUB_OUTPUT"
+          json=$(for dir in "${dirs[@]}"; do
+            jq -cn --arg snap_dir "$dir" --arg snap_name "$(basename "$dir")" '{snap_dir: $snap_dir, snap_name: $snap_name}'
+          done | jq -cs .)
+          echo "snap_projects=$json" >> "$GITHUB_OUTPUT"
 
           echo 'Discovered snap projects:'
           printf ' - %s\n' "${dirs[@]}"
 
   build:
-    name: Build ${{ matrix.snap_dir }}
+    name: Build ${{ matrix.snap.snap_dir }}
     needs: discover-snaps
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        snap_dir: ${{ fromJson(needs.discover-snaps.outputs.snap_dirs) }}
+        snap: ${{ fromJson(needs.discover-snaps.outputs.snap_projects) }}
 
     steps:
       - name: Checkout
@@ -53,12 +55,12 @@ jobs:
         id: build
         uses: snapcore/action-build@v1
         with:
-          path: ${{ matrix.snap_dir }}
+          path: ${{ matrix.snap.snap_dir }}
 
       - name: Upload snap artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.snap_dir }}-snap
+          name: ${{ matrix.snap.snap_name }}-snap
           path: ${{ steps.build.outputs.snap }}
           if-no-files-found: error
