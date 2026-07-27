@@ -4,25 +4,26 @@ SHELL := /bin/bash
 SNAP_OUTPUT_DIR ?= output/snaps
 PIPER_VOICES_DIR ?= speech-provider-piper/voices
 
-.PHONY: clean configure build install connect speak test
-
 SNAPS := $(shell find . -maxdepth 2 -type f -name snapcraft.yaml -printf '%h\n' | sort -u)
 PIPER_VOICES := en-US es-MX ro-RO
+
+.PHONY: clean build install connect speak test all-snaps all-piper-voices connect-orca-spiel \
+	$(SNAPS:%=%-snap) \
+	$(PIPER_VOICES:%=piper-voices-%) \
+	$(PIPER_VOICES:%=connect-%) \
+	$(PIPER_VOICES:%=speak-%)
 
 clean:
 	rm -rf "$(SNAP_OUTPUT_DIR)"
 	rm -rf "$(PIPER_VOICES_DIR)"
 	find . -type f -name '*.snap' -delete
 
-.PHONY: $(SNAPS:%=%-snap)
 $(SNAPS:%=%-snap):
 	mkdir -p "$(SNAP_OUTPUT_DIR)"
 	cd "$(subst -snap,,$@)" && snapcraft pack </dev/null && mv *.snap "$(abspath $(SNAP_OUTPUT_DIR))" || exit 1
 
-.PHONY: all-snaps
 all-snaps: $(SNAPS:%=%-snap)
 
-.PHONY: $(PIPER_VOICES:%=piper-voices-%)
 $(PIPER_VOICES:%=piper-voices-%):
 	mkdir -p "$(PIPER_VOICES_DIR)/$@"
 	cd speech-provider-piper && \
@@ -32,7 +33,6 @@ $(PIPER_VOICES:%=piper-voices-%):
 		snapcraft pack && \
 		mv *.snap "$(abspath $(SNAP_OUTPUT_DIR))"
 
-.PHONY: all-piper-voices
 all-piper-voices: $(PIPER_VOICES:%=piper-voices-%)
 
 build: all-snaps all-piper-voices
@@ -45,20 +45,28 @@ install:
 		"$(SNAP_OUTPUT_DIR)"/speech-provider-piper_*.snap \
 		"$(SNAP_OUTPUT_DIR)"/piper-voices-*.snap
 
-connect:
-	# Connect voices to the speech provider
-	sudo snap connect speech-provider-piper:piper-voices piper-voices-en-us:piper-voices
-	sudo snap connect speech-provider-piper:piper-voices piper-voices-es-mx:piper-voices
-	sudo snap connect speech-provider-piper:piper-voices piper-voices-ro-ro:piper-voices
+connect-orca-spiel:
 	# Connect the speech provider to orca
 	sudo snap connect orca-spiel:speech-provider-piper speech-provider-piper:speech-provider
+
+$(PIPER_VOICES:%=connect-%):
+	@locale="$(subst connect-,,$@)"; \
+	voice_snap="piper-voices-$$(printf '%s' "$$locale" | tr '[:upper:]' '[:lower:]')"; \
+	set -x; \
+	sudo snap connect speech-provider-piper:piper-voices "$$voice_snap":piper-voices
 	# Restart the speech provider after connecting the interfaces to ensure it picks up the new connections
 	sudo snap restart speech-provider-piper.speech-provider-piper
 
-speak: connect
-	orca-spiel.spiel -l en-US "Hello, world!"
-	orca-spiel.spiel -l es-MX "¡Hola, mundo!"
-	orca-spiel.spiel -l ro-RO "Salut, lume!"
+connect: $(PIPER_VOICES:%=connect-%) connect-orca-spiel
+
+$(PIPER_VOICES:%=speak-%):
+	@locale="$(subst speak-,,$@)"; \
+	voice_snap="piper-voices-$$(printf '%s' "$$locale" | tr '[:upper:]' '[:lower:]')"; \
+	phrase="$$(< "/snap/$$voice_snap/current/test_phrase.txt")"; \
+	set -x; \
+	orca-spiel.spiel -l "$$locale" "$$phrase"
+
+speak: $(PIPER_VOICES:%=speak-%)
 
 test:
 	./tests/test_snap_interfaces.sh
