@@ -1,7 +1,7 @@
 #!/bin/bash -x
 #
 # Basic regression test for the spiel snaps and their slots/plugs.
-# Assumes that the orca-spiel, speech-provider-piper, and piper-voices-en-us
+# Assumes that the orca-spiel, speech-provider-piper, and piper-voices-*
 # snaps have been built and are available in their respective directories.
 #
 # 1. Set up a fresh resolute container.
@@ -11,6 +11,7 @@
 # 5. Verify that the spiel binary reports one provider and one voice.
 #
 C=spiel-snap-test  # Name of the test container
+LANG=en-us         # Language/locale of voice to test
 set -euo pipefail  # Exit on error, unset variable, or failed pipe
 
 # Remove any existing container and create a new one
@@ -48,21 +49,21 @@ lxc file push "$HOST_PULSE_COOKIE" "$C/root/.config/pulse/cookie"
 lxc file push \
   orca-spiel/orca-spiel_*.snap \
   speech-provider-piper/speech-provider-piper_*.snap \
-  speech-provider-piper/piper-voices-en-us/piper-voices-en-us_*.snap \
+  speech-provider-piper/voices/piper-voices-${LANG}/*.snap \
   $C/root/
 lxc exec $C -- bash -c "snap install /root/orca-spiel_*.snap --dangerous --devmode"
 lxc exec $C -- bash -c "snap install /root/speech-provider-piper_*.snap --dangerous"
-lxc exec $C -- bash -c "snap install /root/piper-voices-en-us_*.snap --dangerous"
+lxc exec $C -- bash -c "snap install /root/piper-voices-${LANG}_*.snap --dangerous"
 
 # Connect voice to piper, and piper to orca
-lxc exec $C -- snap connect speech-provider-piper:piper-voices piper-voices-en-us:piper-voices
+lxc exec $C -- snap connect speech-provider-piper:piper-voices piper-voices-${LANG}:piper-voices
 lxc exec $C -- snap connect orca-spiel:speech-provider-piper speech-provider-piper:speech-provider
 
 # Environment variables needed for spiel to find the dbus and pulseaudio sockets
-lxc exec $C -- bash -c 'cat > /etc/profile.d/spiel-env.sh <<"EOF"
-export XDG_RUNTIME_DIR=/run/user/0/snap.orca-spiel
-export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/0/bus
-EOF'
+lxc exec $C -- bash -c "printf '%s\n' \
+  'export XDG_RUNTIME_DIR=/run/user/0/snap.orca-spiel' \
+  'export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/0/bus' \
+  > /etc/profile.d/spiel-env.sh"
 
 # spiel binary should show one provider and one voice
 lxc exec $C -- bash -lc 'orca-spiel.spiel -P'
