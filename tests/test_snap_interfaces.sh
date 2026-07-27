@@ -11,7 +11,6 @@
 # 5. Verify that the spiel binary reports one provider and one voice.
 #
 C=spiel-snap-test  # Name of the test container
-LANG=en-us         # Language/locale of voice to test
 set -euo pipefail  # Exit on error, unset variable, or failed pipe
 
 # Remove any existing container and create a new one
@@ -55,8 +54,9 @@ lxc exec $C -- bash -c "snap install /root/orca-spiel_*.snap --dangerous --devmo
 lxc exec $C -- bash -c "snap install /root/speech-provider-piper_*.snap --dangerous"
 lxc exec $C -- bash -c "snap install /root/piper-voices-*.snap --dangerous"
 
-# Connect voice to piper, and piper to orca
-lxc exec $C -- snap connect speech-provider-piper:piper-voices piper-voices-${LANG}:piper-voices
+# Connect some voice packs to piper, and piper to orca
+lxc exec $C -- snap connect speech-provider-piper:piper-voices piper-voices-en-us:piper-voices
+lxc exec $C -- snap connect speech-provider-piper:piper-voices piper-voices-es-mx:piper-voices
 lxc exec $C -- snap connect orca-spiel:speech-provider-piper speech-provider-piper:speech-provider
 
 # Environment variables needed for spiel to find the dbus and pulseaudio sockets
@@ -69,4 +69,5 @@ lxc exec $C -- bash -c "printf '%s\n' \
 lxc exec $C -- bash -lc 'orca-spiel.spiel -P'
 lxc exec $C -- bash -lc 'orca-spiel.spiel -V'
 # Say something
-lxc exec $C -- bash -lc 'orca-spiel.spiel "Hello, world!"'
+lxc exec $C -- bash -lc 'orca-spiel.spiel -l en-us "Hello, world!"'
+lxc exec $C -- bash -lc 'orca-spiel.spiel -l es-MX "¡Hola, mundo!"'
