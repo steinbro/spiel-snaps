@@ -1,24 +1,41 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := build
+
 SNAP_OUTPUT_DIR ?= output/snaps
+PIPER_VOICES_DIR ?= speech-provider-piper/voices
 
 .PHONY: clean configure build install connect speak test
 
+SNAPS := $(shell find . -maxdepth 2 -type f -name snapcraft.yaml -printf '%h\n' | sort -u)
+PIPER_VOICES := en-US es-MX ro-RO
+
 clean:
 	rm -rf "$(SNAP_OUTPUT_DIR)"
+	rm -rf "$(PIPER_VOICES_DIR)"
 	find . -type f -name '*.snap' -delete
 
-build:
+.PHONY: $(SNAPS:%=%-snap)
+$(SNAPS:%=%-snap):
 	mkdir -p "$(SNAP_OUTPUT_DIR)"
-	status=0; \
-	while IFS= read -r dir; do \
-		echo "==> snapcraft pack in $$dir"; \
-		if ! (cd "$$dir" && snapcraft pack </dev/null && mv *.snap "$(abspath $(SNAP_OUTPUT_DIR))"); then \
-			echo "FAILED: $$dir" >&2; \
-			status=1; \
-		fi; \
-	done < <(find . -type f -name snapcraft.yaml -printf '%h\n' | sort -u); \
-	exit $$status
+	cd "$(subst -snap,,$@)" && snapcraft pack </dev/null && mv *.snap "$(abspath $(SNAP_OUTPUT_DIR))" || exit 1
+
+.PHONY: all-snaps
+all-snaps: $(SNAPS:%=%-snap)
+
+.PHONY: $(PIPER_VOICES:%=piper-voices-%)
+$(PIPER_VOICES:%=piper-voices-%):
+	mkdir -p "$(PIPER_VOICES_DIR)/$@"
+	cd speech-provider-piper && \
+		./generate_voice_snapcraft.sh $(subst piper-voices-,,$@) \
+		> "voices/$@/snapcraft.yaml"
+	cd "$(PIPER_VOICES_DIR)/$@" && \
+		snapcraft pack && \
+		mv *.snap "$(abspath $(SNAP_OUTPUT_DIR))"
+
+.PHONY: all-piper-voices
+all-piper-voices: $(PIPER_VOICES:%=piper-voices-%)
+
+build: all-snaps all-piper-voices
 
 install:
 	sudo snap install --devmode --dangerous "$(SNAP_OUTPUT_DIR)"/orca-spiel_*.snap
@@ -27,21 +44,6 @@ install:
 	sudo snap install --dangerous \
 		"$(SNAP_OUTPUT_DIR)"/speech-provider-piper_*.snap \
 		"$(SNAP_OUTPUT_DIR)"/piper-voices-*.snap
-
-LANGUAGES := en-US es-MX ro-RO
-
-.PHONY: $(LANGUAGES:%=piper-voices-%)
-$(LANGUAGES:%=piper-voices-%):
-	mkdir -p speech-provider-piper/voices/$@
-	cd speech-provider-piper && \
-		./generate_voice_snapcraft.sh $(subst piper-voices-,,$@) \
-		> voices/$@/snapcraft.yaml
-	cd speech-provider-piper/voices/$@ && \
-		snapcraft pack && \
-		mv *.snap "$(abspath $(SNAP_OUTPUT_DIR))"
-
-.PHONY: all-languages
-piper-voices-all: $(LANGUAGES:%=piper-voices-%)
 
 connect:
 	# Connect voices to the speech provider
