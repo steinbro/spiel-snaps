@@ -1,0 +1,17 @@
+{
+  "en-US": {
+    "name": "amy",
+    "quality": "medium",
+    "test_phrase": "Hello, world!"
+  },
+  "es-MX": {
+    "name": "claude",
+    "quality": "high",
+    "test_phrase": "Hola, mundo!"
+  },
+  "ro-RO": {
+    "name": "mihai",
+    "quality": "medium",
+    "test_phrase": "Salut, lume!"
+  }
+}

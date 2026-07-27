@@ -8,10 +8,7 @@ clean:
 	rm -rf "$(SNAP_OUTPUT_DIR)"
 	find . -type f -name '*.snap' -delete
 
-configure:
-	cd speech-provider-piper && ./generate_all_voices.sh
-
-build: configure
+build:
 	mkdir -p "$(SNAP_OUTPUT_DIR)"
 	status=0; \
 	while IFS= read -r dir; do \
@@ -30,6 +27,21 @@ install:
 	sudo snap install --dangerous \
 		"$(SNAP_OUTPUT_DIR)"/speech-provider-piper_*.snap \
 		"$(SNAP_OUTPUT_DIR)"/piper-voices-*.snap
+
+LANGUAGES := en-US es-MX ro-RO
+
+.PHONY: $(LANGUAGES:%=piper-voices-%)
+$(LANGUAGES:%=piper-voices-%):
+	mkdir -p speech-provider-piper/voices/$@
+	cd speech-provider-piper && \
+		./generate_voice_snapcraft.sh $(subst piper-voices-,,$@) \
+		> voices/$@/snapcraft.yaml
+	cd speech-provider-piper/voices/$@ && \
+		snapcraft pack && \
+		mv *.snap "$(abspath $(SNAP_OUTPUT_DIR))"
+
+.PHONY: all-languages
+piper-voices-all: $(LANGUAGES:%=piper-voices-%)
 
 connect:
 	# Connect voices to the speech provider
