@@ -1,24 +1,50 @@
 SHELL := /bin/bash
-.DEFAULT_GOAL := snaps
+.DEFAULT_GOAL := build
+SNAP_OUTPUT_DIR ?= output/snaps
 
-.PHONY: clean piper-voices snaps test
+.PHONY: clean configure build install connect speak test
 
 clean:
+	rm -rf "$(SNAP_OUTPUT_DIR)"
 	find . -type f -name '*.snap' -delete
 
-piper-voice-configs:
+configure:
 	cd speech-provider-piper && ./generate_all_voices.sh
 
-snaps: piper-voice-configs
+build: configure
+	mkdir -p "$(SNAP_OUTPUT_DIR)"
 	status=0; \
 	while IFS= read -r dir; do \
 		echo "==> snapcraft pack in $$dir"; \
-		if ! (cd "$$dir" && snapcraft pack </dev/null); then \
+		if ! (cd "$$dir" && snapcraft pack </dev/null && mv *.snap "$(abspath $(SNAP_OUTPUT_DIR))"); then \
 			echo "FAILED: $$dir" >&2; \
 			status=1; \
 		fi; \
 	done < <(find . -type f -name snapcraft.yaml -printf '%h\n' | sort -u); \
 	exit $$status
+
+install:
+	sudo snap install --devmode --dangerous "$(SNAP_OUTPUT_DIR)"/orca-spiel_*.snap
+	# Speech providers require user-daemons feature flag in snapd
+	sudo snap set system experimental.user-daemons=true
+	sudo snap install --dangerous \
+		"$(SNAP_OUTPUT_DIR)"/speech-provider-piper_*.snap \
+		"$(SNAP_OUTPUT_DIR)"/piper-voices-*.snap
+
+connect:
+	# Connect voices to the speech provider
+	sudo snap connect speech-provider-piper:piper-voices piper-voices-en-us:piper-voices
+	sudo snap connect speech-provider-piper:piper-voices piper-voices-es-mx:piper-voices
+	sudo snap connect speech-provider-piper:piper-voices piper-voices-ro-ro:piper-voices
+	# Connect the speech provider to orca
+	sudo snap connect orca-spiel:speech-provider-piper speech-provider-piper:speech-provider
+	# Restart the speech provider after connecting the interfaces to ensure it picks up the new connections
+	sudo snap restart speech-provider-piper.speech-provider-piper
+
+speak: connect
+	orca-spiel.spiel -l en-US "Hello, world!"
+	orca-spiel.spiel -l es-MX "¡Hola, mundo!"
+	orca-spiel.spiel -l ro-RO "Salut, lume!"
 
 test:
 	./tests/test_snap_interfaces.sh

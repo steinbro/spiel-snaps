@@ -45,11 +45,7 @@ lxc config device add $C pulse-native proxy \
 lxc file push "$HOST_PULSE_COOKIE" "$C/root/.config/pulse/cookie"
 
 # Install snaps for orca, piper, and a voice
-lxc file push \
-  orca-spiel/orca-spiel_*.snap \
-  speech-provider-piper/speech-provider-piper_*.snap \
-  speech-provider-piper/voices/**/*.snap \
-  $C/root/
+lxc file push output/snaps/*.snap $C/root/
 lxc exec $C -- bash -c "snap install /root/orca-spiel_*.snap --dangerous --devmode"
 lxc exec $C -- bash -c "snap install /root/speech-provider-piper_*.snap --dangerous"
 lxc exec $C -- bash -c "snap install /root/piper-voices-*.snap --dangerous"
