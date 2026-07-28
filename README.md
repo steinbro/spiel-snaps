@@ -45,6 +45,7 @@ $ sudo snap restart speech-provider-piper.speech-provider-piper
 Creating a snap for a new voice involves simply editing the voices.yaml file in the speech-provider-piper directory. The following make targets will automatically become available (using en-US as an example locale):
 ```bash
 make piper-voices-en-US  # Build the snap
+make install-piper-voices-en-US
 make connect-en-US       # Connect the snap to the Piper speech provider
 make speak-en-US         # Speak a test phrase
 ```
