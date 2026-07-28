@@ -6,8 +6,8 @@ PIPER_VOICES_DIR ?= speech-provider-piper/voices
 
 # Set of snaps to build comprises all directories containing a snapcraft.yaml file
 SNAPS := $(shell find . -maxdepth 2 -type f -name snapcraft.yaml -printf '%h\n' | sort -u)
-# Set of piper voices to build is governed by keys in the voices.json file
-PIPER_VOICES := $(shell jq -r 'keys_unsorted[]' speech-provider-piper/voices.json)
+# Set of piper voices to build is governed by keys in the voices.yaml file
+PIPER_VOICES := $(shell yq -r 'keys_unsorted[]' speech-provider-piper/voices.yaml)
 
 .PHONY: clean build install connect speak test all-snaps all-piper-voices connect-orca-spiel \
 	$(SNAPS:%=%-snap) \

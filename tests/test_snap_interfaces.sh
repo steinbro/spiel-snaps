@@ -24,9 +24,9 @@ lxc exec $C -- systemctl start snapd
 # Enable feature flag needed for speech-provider-piper to run as a user daemon
 lxc exec $C -- snap set system experimental.user-daemons=true
 
-# Install dbus
+# Install dbus and other dependencies
 lxc exec $C -- apt update
-lxc exec $C -- apt install -y dbus-x11 make
+lxc exec $C -- apt install -y dbus-x11 make yq
 # Tell systemd to keep user 0's session active permanently
 lxc exec $C -- loginctl enable-linger 0
 # Boot the systemd user instance for root

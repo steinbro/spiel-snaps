@@ -11,7 +11,7 @@ Example:
 
 Notes:
   - locale must look like ll-CC
-  - voices (name/quality pairs) and test_phrase are read from voices.json
+  - voices (as name-quality entries) and test_phrase are read from voices.yaml
 EOF
 }
 
@@ -22,7 +22,7 @@ fi
 
 locale_raw="$1"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-voices_json="${script_dir}/voices.json"
+voices_yaml="${script_dir}/voices.yaml"
 
 if [[ ! "$locale_raw" =~ ^([A-Za-z0-9_]+)-([A-Za-z0-9_]+)$ ]]; then
 	usage
@@ -39,15 +39,21 @@ country_upper="$(printf '%s' "$country_raw" | tr '[:lower:]' '[:upper:]')"
 locale_dash="${language_lower}-${country_upper}"
 locale_underscore="${language_lower}_${country_upper}"
 
-test_phrase="$(jq -r --arg locale "$locale_dash" '.[$locale].test_phrase' "$voices_json")"
+test_phrase="$(yq -r --arg locale "$locale_dash" '.[$locale].test_phrase' "$voices_yaml")"
 
-mapfile -t voice_names < <(jq -r --arg locale "$locale_dash" '.[$locale].voices[].name' "$voices_json")
-mapfile -t voice_qualities < <(jq -r --arg locale "$locale_dash" '.[$locale].voices[].quality' "$voices_json")
+mapfile -t voice_ids < <(yq -r --arg locale "$locale_dash" '.[$locale].voices[]' "$voices_yaml")
 
-if [[ "${#voice_names[@]}" -eq 0 ]]; then
-  echo "No voices configured for locale ${locale_dash} in ${voices_json}" >&2
+if [[ "${#voice_ids[@]}" -eq 0 ]]; then
+  echo "No voices configured for locale ${locale_dash} in ${voices_yaml}" >&2
   exit 1
 fi
+
+voice_names=()
+voice_qualities=()
+for voice_id in "${voice_ids[@]}"; do
+  voice_names+=("${voice_id%-*}")
+  voice_qualities+=("${voice_id##*-}")
+done
 
 pack_name="piper-voices-${language_lower}-${country_lower}"
 base_url_prefix="https://huggingface.co/rhasspy/piper-voices/resolve/main/${language_lower}/${locale_underscore}"

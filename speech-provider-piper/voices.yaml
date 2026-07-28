@@ -1,0 +1,20 @@
+en-GB:
+  test_phrase: Hello, world!
+  voices:
+    - alan-medium
+    - alba-medium
+    - cori-medium
+en-US:
+  test_phrase: Hello, world!
+  voices:
+    - amy-medium
+    - lessac-medium
+    - ryan-medium
+es-MX:
+  test_phrase: Hola, mundo!
+  voices:
+    - claude-high
+ro-RO:
+  test_phrase: Salut, lume!
+  voices:
+    - mihai-medium
