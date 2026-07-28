@@ -2,13 +2,13 @@
 #
 # Basic regression test for the spiel snaps and their slots/plugs.
 # Assumes that the orca-spiel, speech-provider-piper, and piper-voices-*
-# snaps have been built and are available in their respective directories.
+# snaps have been built and are available in the output/snaps directory.
 #
 # 1. Set up a fresh resolute container.
 # 2. Perform minimal configuration of snapd, dbus, and pulseaudio.
 # 3. Install the orca, piper, and voice snaps.
 # 4. Connect the snaps' slots and plugs.
-# 5. Verify that the spiel binary reports one provider and one voice.
+# 5. Trigger speech using the spiel binary.
 #
 C=spiel-snap-test  # Name of the test container
 set -euo pipefail  # Exit on error, unset variable, or failed pipe
@@ -51,7 +51,7 @@ lxc exec $C -- bash -c "printf '%s\n' \
   > /etc/profile.d/spiel-env.sh"
 
 # Run Makefile targets in the container
-lxc file push --recursive Makefile output $C/root
+lxc file push --recursive * $C/root
 lxc exec $C -- bash -lc "make install"
 lxc exec $C -- bash -lc "make connect"
 lxc exec $C -- bash -lc "make speak"

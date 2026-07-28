@@ -1,17 +1,53 @@
 {
-  "en-US": {
-    "name": "amy",
-    "quality": "medium",
+  "en-GB": {
+    "voices": [
+      {
+        "name": "alan",
+        "quality": "medium"
+      },
+      {
+        "name": "alba",
+        "quality": "medium"
+      },
+      {
+        "name": "cori",
+        "quality": "medium"
+      }
+    ],
+    "test_phrase": "Hello, world!"
+  },  "en-US": {
+    "voices": [
+      {
+        "name": "amy",
+        "quality": "medium"
+      },
+      {
+        "name": "lessac",
+        "quality": "medium"
+      },
+      {
+        "name": "ryan",
+        "quality": "medium"
+      }
+    ],
     "test_phrase": "Hello, world!"
   },
   "es-MX": {
-    "name": "claude",
-    "quality": "high",
+    "voices": [
+      {
+        "name": "claude",
+        "quality": "high"
+      }
+    ],
     "test_phrase": "Hola, mundo!"
   },
   "ro-RO": {
-    "name": "mihai",
-    "quality": "medium",
+    "voices": [
+      {
+        "name": "mihai",
+        "quality": "medium"
+      }
+    ],
     "test_phrase": "Salut, lume!"
   }
 }

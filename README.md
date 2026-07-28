@@ -59,4 +59,4 @@ The snap structure closely follows the intended architecture of Spiel services.
 
 Each speech provider runs in its own strictly-confined snap, and exposes a D-Bus service for communication. Spiel client apps like orca can find speech providers and voices through D-Bus service discovery. Speech providers are automatically started via D-Bus service activation.
 
-Voices are packaged as their own content snaps, and are connected through a content interface. libspiel is compiled into client snaps like orca.
+Voices are downloaded from the [rhaspy/piper-voices repo](https://huggingface.co/rhasspy/piper-voices) on Hugging Face. They are packaged per-locale as their own snaps, connected through a content interface.
