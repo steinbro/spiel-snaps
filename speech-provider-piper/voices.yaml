@@ -1,20 +1,20 @@
 en-GB:
-  test_phrase: Hello, world!
+  test_phrase: The quick brown fox jumps over the lazy dog.
   voices:
     - alan-medium
     - alba-medium
     - cori-medium
 en-US:
-  test_phrase: Hello, world!
+  test_phrase: Pack my box with five dozen liquor jugs.
   voices:
     - amy-medium
     - lessac-medium
     - ryan-medium
 es-MX:
-  test_phrase: Hola, mundo!
+  test_phrase: El veloz murciélago hindú comía feliz cardillo y kiwi.
   voices:
     - claude-high
 ro-RO:
-  test_phrase: Salut, lume!
+  test_phrase: Muzicologă în bej vând whisky și tequila, preț fix.
   voices:
     - mihai-medium

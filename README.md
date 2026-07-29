@@ -42,12 +42,13 @@ $ sudo snap connect speech-provider-piper:piper-voices piper-voices-es-mx:piper-
 $ sudo snap restart speech-provider-piper.speech-provider-piper
 ```
 ### Packaging a new voice
-Creating a snap for a new voice involves simply editing the voices.yaml file in the speech-provider-piper directory. The following make targets will automatically become available (using en-US as an example locale):
+Creating a snap for a new voice involves simply editing the voices.yaml file in the speech-provider-piper directory. The following make targets will automatically become available upon making changes to that file (using en-US as an example locale):
 ```bash
 make piper-voices-en-US  # Build the snap
 make install-piper-voices-en-US
 make connect-en-US       # Connect the snap to the Piper speech provider
 make speak-en-US         # Speak a test phrase
+make validate-en-US      # Install, connect, and try speaking with all voices for the locale
 ```
 
 ## Testing

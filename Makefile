@@ -97,13 +97,18 @@ $(PIPER_VOICES:%=connect-%):
 
 connect: $(PIPER_VOICES:%=connect-%) connect-orca-spiel
 
-# Use the orca-spiel binary to speak a test phrase using the specified voice.
+# Use the orca-spiel binary to speak a test phrase with every voice included in
+# the specified locale's pack, e.g. `make speak-en-US` speaks with en-US.amy-medium,
+# en-US.lessac-medium, en-US.ryan-medium, etc.
 $(PIPER_VOICES:%=speak-%):
 	@locale="$(subst speak-,,$@)"; \
 	voice_snap="piper-voices-$$(printf '%s' "$$locale" | tr '[:upper:]' '[:lower:]')"; \
 	phrase="$$(< "/snap/$$voice_snap/current/test_phrase.txt")"; \
+	mapfile -t voice_ids < <(yq -r --arg locale "$$locale" '.[$$locale].voices[]' speech-provider-piper/voices.yaml); \
 	set -x; \
-	orca-spiel.spiel -l "$$locale" "$$phrase"
+	for voice_id in "$${voice_ids[@]}"; do \
+		orca-spiel.spiel -v "$$locale.$$voice_id" "$$phrase"; \
+	done
 
 # Speak using all piper voices in the voices.json file.
 speak: $(PIPER_VOICES:%=speak-%)
