@@ -52,6 +52,6 @@ lxc exec $C -- bash -c "printf '%s\n' \
 
 # Run Makefile targets in the container
 lxc file push --recursive * $C/root
-lxc exec $C -- bash -lc "make install"
-lxc exec $C -- bash -lc "make connect"
-lxc exec $C -- bash -lc "make speak"
+lxc exec $C -- bash -lc "make install-speech-provider-piper install-piper-voices-en-GB install-orca-spiel"
+lxc exec $C -- bash -lc "make connect-orca-spiel connect-en-GB"
+lxc exec $C -- bash -lc "make speak-en-GB"

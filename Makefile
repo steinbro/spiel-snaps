@@ -58,7 +58,15 @@ build: all-snaps all-piper-voices
 
 # orca-spiel and spiel-it snaps require --devmode for now.
 $(DEVMODE_SNAP_NAMES:%=install-%):
-	sudo snap install --devmode --dangerous "$(SNAP_OUTPUT_DIR)"/$(subst install-,,$@)_*.snap
+	@name="$(subst install-,,$@)"; \
+	shopt -s nullglob; \
+	files=("$(SNAP_OUTPUT_DIR)"/$${name}_*.snap); \
+	if [ "$${#files[@]}" -eq 0 ]; then \
+		echo "Skipping $$name: no built snap found in $(SNAP_OUTPUT_DIR) (run 'make $$name-snap' to build it)"; \
+		exit 0; \
+	fi; \
+	set -x; \
+	sudo snap install --devmode --dangerous "$${files[@]}"
 
 # Speech providers require the user-daemons feature flag in snapd.
 enable-user-daemons:
@@ -66,19 +74,41 @@ enable-user-daemons:
 
 # Install any speech-provider-* snap (e.g. speech-provider-piper, speech-provider-espeak),
 # ensuring the user-daemons feature flag is enabled first.
-$(SPEECH_PROVIDER_NAMES:%=install-%): install-speech-provider-%: enable-user-daemons
-	sudo snap install --dangerous "$(SNAP_OUTPUT_DIR)"/speech-provider-$*_*.snap
+$(SPEECH_PROVIDER_NAMES:%=install-%): install-speech-provider-%:
+	@shopt -s nullglob; \
+	files=("$(SNAP_OUTPUT_DIR)"/speech-provider-$*_*.snap); \
+	if [ "$${#files[@]}" -eq 0 ]; then \
+		echo "Skipping speech-provider-$*: no built snap found in $(SNAP_OUTPUT_DIR) (run 'make speech-provider-$*-snap' to build it)"; \
+		exit 0; \
+	fi; \
+	$(MAKE) enable-user-daemons; \
+	set -x; \
+	sudo snap install --dangerous "$${files[@]}"
 
 # Install any other top-level snap that doesn't need special handling.
 $(OTHER_SNAP_NAMES:%=install-%):
-	sudo snap install --dangerous "$(SNAP_OUTPUT_DIR)"/$(subst install-,,$@)_*.snap
+	@name="$(subst install-,,$@)"; \
+	shopt -s nullglob; \
+	files=("$(SNAP_OUTPUT_DIR)"/$${name}_*.snap); \
+	if [ "$${#files[@]}" -eq 0 ]; then \
+		echo "Skipping $$name: no built snap found in $(SNAP_OUTPUT_DIR) (run 'make $$name-snap' to build it)"; \
+		exit 0; \
+	fi; \
+	set -x; \
+	sudo snap install --dangerous "$${files[@]}"
 
 # Install a single piper voice snap, e.g. `make install-piper-voices-en-US`.
 $(PIPER_VOICES:%=install-piper-voices-%):
 	@locale="$(subst install-piper-voices-,,$@)"; \
 	voice_snap="piper-voices-$$(printf '%s' "$$locale" | tr '[:upper:]' '[:lower:]')"; \
+	shopt -s nullglob; \
+	files=("$(SNAP_OUTPUT_DIR)/$${voice_snap}"_*.snap); \
+	if [ "$${#files[@]}" -eq 0 ]; then \
+		echo "Skipping $$voice_snap: no built snap found in $(SNAP_OUTPUT_DIR) (run 'make piper-voices-$$locale' to build it)"; \
+		exit 0; \
+	fi; \
 	set -x; \
-	sudo snap install --dangerous "$(SNAP_OUTPUT_DIR)/$${voice_snap}"_*.snap
+	sudo snap install --dangerous "$${files[@]}"
 
 install: $(SNAP_NAMES:%=install-%) $(PIPER_VOICES:%=install-piper-voices-%)
 
@@ -103,6 +133,10 @@ connect: $(PIPER_VOICES:%=connect-%) connect-orca-spiel
 $(PIPER_VOICES:%=speak-%):
 	@locale="$(subst speak-,,$@)"; \
 	voice_snap="piper-voices-$$(printf '%s' "$$locale" | tr '[:upper:]' '[:lower:]')"; \
+	if [ ! -d "/snap/$$voice_snap/current" ]; then \
+		echo "Skipping $$locale: $$voice_snap is not installed (run 'make install-piper-voices-$$locale' first)"; \
+		exit 0; \
+	fi; \
 	phrase="$$(< "/snap/$$voice_snap/current/test_phrase.txt")"; \
 	mapfile -t voice_ids < <(yq -r --arg locale "$$locale" '.[$$locale].voices[]' speech-provider-piper/voices.yaml); \
 	set -x; \
@@ -113,8 +147,8 @@ $(PIPER_VOICES:%=speak-%):
 # Speak using all piper voices in the voices.json file.
 speak: $(PIPER_VOICES:%=speak-%)
 
-# Validate a single piper voice end-to-end: build the orca-spiel, speech-provider-piper
-# and voice snaps, install them, connect the voice, and speak a test phrase.
+# Validate a single piper voice end-to-end: install the orca-spiel, speech-provider-piper
+# and voice snaps, connect the voice, and speak a test phrase.
 # e.g. `make validate-piper-voice-en-US`
 $(PIPER_VOICES:%=validate-piper-voice-%): validate-piper-voice-%:
 	$(MAKE) install-piper-voices-$*

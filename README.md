@@ -12,14 +12,12 @@ There are snap configurations for:
 
 Build and install spiel-enabled orca, the piper speech provider, and a voice pack, and play some audio to test:
 ```bash
-make
+make speech-provider-piper-snap
+make piper-voices-en-GB
+make orca-spiel-snap
 make install
+make connect-en-GB connect-orca-spiel
 make speak
-```
-
-By default, this will build all snaps and voices in the repository. If you just want to use Piper in US English, you can make the first command more specific:
-```bash
-make speech-provider-piper-snap piper-voices-en-US orca-spiel-snap
 ```
 
 ## Managing speech providers and voices
