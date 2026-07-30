@@ -93,13 +93,16 @@ validate-piper-voice-%:
 install: $(SNAP_NAMES:%=install-%)
 	$(PIPER_VOICES_MAKE) install
 
-connect-orca-spiel:
+connect-speech-provider-espeak:
+	# Connect the speech provider to orca
+	sudo snap connect orca-spiel:speech-provider-espeak speech-provider-espeak:speech-provider
+
+connect-speech-provider-piper:
+	$(PIPER_VOICES_MAKE) connect
 	# Connect the speech provider to orca
 	sudo snap connect orca-spiel:speech-provider-piper speech-provider-piper:speech-provider
 
-connect:
-	$(PIPER_VOICES_MAKE) connect
-	$(MAKE) connect-orca-spiel
+connect: $(SPEECH_PROVIDER_NAMES:%=connect-%)
 
 # Speak using all piper voices in the voices.yaml file.
 speak:
