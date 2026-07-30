@@ -105,8 +105,14 @@ connect-speech-provider-piper:
 connect: $(SPEECH_PROVIDER_NAMES:%=connect-%)
 
 # Speak using all piper voices in the voices.yaml file.
-speak:
+speak-speech-provider-piper:
 	$(PIPER_VOICES_MAKE) speak
+
+speak-speech-provider-espeak:
+	# Speak a test phrase with the espeak speech provider
+	orca-spiel.spiel -p org.espeak.Speech.Provider "Hello, world!"
+
+speak: $(SPEECH_PROVIDER_NAMES:%=speak-%)
 
 # Run the test script to verify that the snaps and their interfaces are working correctly.
 test:

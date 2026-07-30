@@ -12,8 +12,9 @@ There are snap configurations for:
 
 Build and install spiel-enabled orca, the piper speech provider, and a voice pack, and play some audio to test:
 ```bash
-ake SNAPS="speech-provider-piper orca-spiel" \
-  PIPER_VOICES=en-GB install connect speak
+make SNAPS="speech-provider-piper orca-spiel" \
+  PIPER_VOICES=en-GB \
+  build install connect speak
 ```
 
 ## Managing speech providers and voices
