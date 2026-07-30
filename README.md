@@ -12,12 +12,8 @@ There are snap configurations for:
 
 Build and install spiel-enabled orca, the piper speech provider, and a voice pack, and play some audio to test:
 ```bash
-make speech-provider-piper-snap
-make piper-voices-en-GB
-make orca-spiel-snap
-make install
-make connect-en-GB connect-orca-spiel
-make speak
+ake SNAPS="speech-provider-piper orca-spiel" \
+  PIPER_VOICES=en-GB install connect speak
 ```
 
 ## Managing speech providers and voices
@@ -40,7 +36,7 @@ $ sudo snap connect speech-provider-piper:piper-voices piper-voices-es-mx:piper-
 $ sudo snap restart speech-provider-piper.speech-provider-piper
 ```
 ### Packaging a new voice
-Creating a snap for a new voice involves simply editing the voices.yaml file in the speech-provider-piper directory. The following make targets will automatically become available upon making changes to that file (using en-US as an example locale):
+Creating a snap for a new voice involves simply editing the voices.yaml file in the piper-voices directory. The following make targets will automatically become available upon making changes to that file (using en-US as an example locale):
 ```bash
 make piper-voices-en-US  # Build the snap
 make install-piper-voices-en-US

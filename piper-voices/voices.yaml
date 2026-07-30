@@ -1,3 +1,13 @@
+#
+# This file is used to define test phrases and voice IDs for different locales.
+# The test phrases are used to validate that the speech synthesis is working correctly for each locale.
+#
+# Voices will be fetched from
+# https://huggingface.co/rhasspy/piper-voices
+#
+# Browse and listen to voice samples at
+# https://rhasspy.github.io/piper-samples/
+#
 en-GB:
   test_phrase: The quick brown fox jumps over the lazy dog.
   voices:
