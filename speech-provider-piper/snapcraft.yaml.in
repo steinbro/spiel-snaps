@@ -1,0 +1,81 @@
+name: speech-provider-piper
+summary: Piper Speech Provider
+description: |
+  This is a Spiel speech provider for neural TTS models like Piper.
+version: '0.1'
+grade: devel
+confinement: strict
+base: core26
+
+slots:
+  speech-provider:
+    interface: dbus
+    bus: session
+    name: ai.piper.Speech.Provider
+
+apps:
+  speech-provider-piper:
+    command: usr/local/bin/speech-provider-piper
+    daemon: simple
+    daemon-scope: user
+    activates-on: [speech-provider]
+    environment:
+      ESPEAK_DATA_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/espeak-ng-data
+      LD_LIBRARY_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/pulseaudio:$LD_LIBRARY_PATH
+    plugs:
+      - audio-playback
+      - pulseaudio  #XXX not necessary?
+    slots:
+      - speech-provider
+
+parts:
+  libspeechprovider:
+    plugin: meson
+    source: https://github.com/project-spiel/libspeechprovider.git
+    source-type: git
+    source-tag: SPEECHPROVIDER_1_0_3
+    meson-parameters:
+      - --prefix=/usr
+    build-packages:
+      - build-essential
+      - meson
+      - ninja-build
+      - pkg-config
+      - libglib2.0-dev
+      - libgirepository1.0-dev
+      - python3-tap
+      - gi-docgen
+
+  speech-provider-piper:
+    plugin: meson
+    source: https://github.com/project-spiel/speech-provider-piper.git
+    source-type: git
+    source-tag: SPEECH_PROVIDER_PIPER_0_1_0
+    after: [libspeechprovider]
+    build-snaps:
+      - rustup
+    build-packages:
+      - cmake
+      - libclang-dev
+      - libespeak-ng-dev
+    stage-packages:
+      # Piper requires espeak-ng-data for phoneme generation
+      - espeak-ng-data
+      - libespeak-ng1
+      - libpulse0
+    build-environment:
+      - USE_SYSTEM_ESPEAK: "1"
+    meson-parameters:
+      # Populated at runtime by voice component install/post-refresh hooks
+      # Must match TARGET_DIR in component-hooks/install and component-hooks/post-refresh
+      - -Dvoices_dir=/var/snap/$SNAPCRAFT_PROJECT_NAME/current/voices/
+    override-build: |
+      # Some dependencies (e.g. sonata) require a nightly rust toolchain
+      export RUSTUP_TOOLCHAIN=nightly-2024-08-15
+      unset RUSTFLAGS
+      unset CARGO_ENCODED_RUSTFLAGS
+      rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
+      rustup default "$RUSTUP_TOOLCHAIN"
+      rustc --version
+      cargo --version
+      craftctl default

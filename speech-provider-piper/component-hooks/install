@@ -7,11 +7,12 @@ mkdir -p "$TARGET_DIR"
 
 # $SNAP_COMPONENT contains the exact path to this component's active mount
 # Example: /snap/speech-provider-piper/current/components/mnt/voices-en-us-amy-medium/x1
+# The voice ID piper expects (e.g. en_US-amy-medium) is the .onnx file's
+# basename, not the component's own name, so derive it from that instead.
 if [ -n "$SNAP_COMPONENT" ]; then
-    # Remove trailing path (everything after last /) to get parent directory
-    COMPONENT_NAME=${SNAP_COMPONENT%/*}
-    # Remove leading path (everything up to last /) to get directory name only
-    COMPONENT_NAME=${COMPONENT_NAME##*/}
-    # Create symbolic link from component path to target directory
-    ln -sfn "$SNAP_COMPONENT" "$TARGET_DIR/$COMPONENT_NAME"
+    for onnx in "$SNAP_COMPONENT"/*.onnx; do
+        [ -e "$onnx" ] || continue
+        voice_id=$(basename "$onnx" .onnx)
+        ln -sfn "$SNAP_COMPONENT" "$TARGET_DIR/$voice_id"
+    done
 fi

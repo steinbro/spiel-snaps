@@ -22,12 +22,19 @@ clean:
 	rm -rf "$(SNAP_OUTPUT_DIR)"
 	find . -type f -name '*.snap' -delete
 
+# speech-provider-piper's snapcraft.yaml is generated: it bundles one voice
+# component per voice listed in voices.yaml, appended to the static template.
+speech-provider-piper/snapcraft.yaml: speech-provider-piper/snapcraft.yaml.in speech-provider-piper/voices.yaml speech-provider-piper/generate_snapcraft.sh
+	cd speech-provider-piper && ./generate_snapcraft.sh > snapcraft.yaml
+
+speech-provider-piper-snap: speech-provider-piper/snapcraft.yaml
+
 # Building a snap just involves calling snapcraft pack in the directory
 # containing the snapcraft.yaml file and moving the resulting .snap file to
 # the output directory.
 $(SNAPS:%=%-snap):
 	mkdir -p "$(SNAP_OUTPUT_DIR)"
-	cd "$(subst -snap,,$@)" && snapcraft pack </dev/null && mv *.snap *.comp "$(abspath $(SNAP_OUTPUT_DIR))" || exit 1
+	cd "$(subst -snap,,$@)" && snapcraft pack </dev/null && shopt -s nullglob && mv *.snap *.comp "$(abspath $(SNAP_OUTPUT_DIR))" || exit 1
 
 all-snaps: $(SNAPS:%=%-snap)
 
@@ -81,9 +88,19 @@ connect-speech-provider-piper:
 
 connect: $(SPEECH_PROVIDER_NAMES:%=connect-%)
 
+# Speak each locale's test phrase with every voice defined for that locale in voices.yaml.
 speak-speech-provider-piper:
-	# Speak a test phrase with the piper speech provider
-	orca-spiel.spiel -p ai.piper.Speech.Provider "Hello, world!"
+	@voices_yaml="speech-provider-piper/voices.yaml"; \
+	mapfile -t locales < <(yq -r 'keys_unsorted[]' "$$voices_yaml"); \
+	set -x; \
+	for locale in "$${locales[@]}"; do \
+		phrase="$$(yq -r --arg locale "$$locale" '.[$$locale].test_phrase' "$$voices_yaml")"; \
+		locale_underscore="$${locale//-/_}"; \
+		mapfile -t voice_ids < <(yq -r --arg locale "$$locale" '.[$$locale].voices[]' "$$voices_yaml"); \
+		for voice_id in "$${voice_ids[@]}"; do \
+			orca-spiel.spiel -v "$${locale_underscore}-$${voice_id}" "$$phrase"; \
+		done; \
+	done
 
 speak-speech-provider-espeak:
 	# Speak a test phrase with the espeak speech provider

@@ -1,8 +1,9 @@
 #!/bin/bash -x
 #
 # Basic regression test for the spiel snaps and their slots/plugs.
-# Assumes that the orca-spiel, speech-provider-piper, and piper-voices-*
-# snaps have been built and are available in the output/snaps directory.
+# Assumes that the orca-spiel and speech-provider-piper snaps (the latter
+# bundling its piper voices as components) have been built and are available
+# in the output/snaps directory.
 #
 # 1. Restore the reusable base container snapshot (creating it via
 #    setup_base_container.sh if it doesn't exist yet), which already has
@@ -74,6 +75,5 @@ lxc file push "$HOST_PULSE_COOKIE" "$C/root/.config/pulse/cookie"
 lxc file push --recursive * $C/root
 lxc exec $C -- bash -lc "make \
   SNAPS=\"speech-provider-piper orca-spiel\" \
-  PIPER_VOICES=en-US \
   install connect speak
 "
