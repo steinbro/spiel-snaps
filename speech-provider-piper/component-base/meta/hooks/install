@@ -1,7 +1,15 @@
 #!/bin/sh
+#
+# This script runs inside the snap after installation. It creates symlinks for
+# voices so that they are located at a static path known at build time (passed
+# as the `voices_dir` parameter when building speech-provider-piper).
+#
+# It also names each voice directory using the format of the .onnx filename
+# (e.g. en_US-amy-medium) which piper will use as the voice ID. 
+#
 set -e
 
-# Target directory inside writable $SNAP_DATA where your app looks for models
+# Target directory inside $SNAP_DATA where speech-provider-piper looks for models
 TARGET_DIR="$SNAP_DATA/voices"
 mkdir -p "$TARGET_DIR"
 

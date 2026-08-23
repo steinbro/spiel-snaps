@@ -12,6 +12,8 @@ DEVMODE_SNAP_NAMES := orca-spiel spiel-it
 # Speech provider snaps require the user-daemons feature flag in snapd.
 SPEECH_PROVIDER_NAMES := $(filter speech-provider-%,$(SNAP_NAMES))
 OTHER_SNAP_NAMES := $(filter-out $(DEVMODE_SNAP_NAMES) $(SPEECH_PROVIDER_NAMES),$(SNAP_NAMES))
+# Locales (e.g. en-GB) for which voices will be packaged as components.
+PIPER_LOCALES := $(shell yq -r 'keys_unsorted[]' speech-provider-piper/voices.yaml)
 
 .PHONY: clean build install connect speak test all-snaps connect-orca-spiel \
 	enable-user-daemons \
@@ -89,18 +91,14 @@ connect-speech-provider-piper:
 connect: $(SPEECH_PROVIDER_NAMES:%=connect-%)
 
 # Speak each locale's test phrase with every voice defined for that locale in voices.yaml.
-speak-speech-provider-piper:
-	@voices_yaml="speech-provider-piper/voices.yaml"; \
-	mapfile -t locales < <(yq -r 'keys_unsorted[]' "$$voices_yaml"); \
+speak-speech-provider-piper: $(PIPER_LOCALES:%=speak-speech-provider-piper-%)
+
+# Speak a locale's test phrase with any voice for that locale
+$(PIPER_LOCALES:%=speak-speech-provider-piper-%):
+	@locale="$(subst speak-speech-provider-piper-,,$@)"; \
+	phrase="$$(yq -r --arg locale "$$locale" '.[$$locale].test_phrase' speech-provider-piper/voices.yaml)"; \
 	set -x; \
-	for locale in "$${locales[@]}"; do \
-		phrase="$$(yq -r --arg locale "$$locale" '.[$$locale].test_phrase' "$$voices_yaml")"; \
-		locale_underscore="$${locale//-/_}"; \
-		mapfile -t voice_ids < <(yq -r --arg locale "$$locale" '.[$$locale].voices[]' "$$voices_yaml"); \
-		for voice_id in "$${voice_ids[@]}"; do \
-			orca-spiel.spiel -v "$${locale_underscore}-$${voice_id}" "$$phrase"; \
-		done; \
-	done
+	orca-spiel.spiel -l "$${locale}" "$$phrase";
 
 speak-speech-provider-espeak:
 	# Speak a test phrase with the espeak speech provider
