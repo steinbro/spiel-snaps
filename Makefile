@@ -13,11 +13,7 @@ DEVMODE_SNAP_NAMES := orca-spiel spiel-it
 SPEECH_PROVIDER_NAMES := $(filter speech-provider-%,$(SNAP_NAMES))
 OTHER_SNAP_NAMES := $(filter-out $(DEVMODE_SNAP_NAMES) $(SPEECH_PROVIDER_NAMES),$(SNAP_NAMES))
 
-# Piper voice packs live in their own directory with their own Makefile;
-# forward the relevant targets there, passing down an absolute output dir.
-PIPER_VOICES_MAKE := $(MAKE) -C piper-voices SNAP_OUTPUT_DIR="$(abspath $(SNAP_OUTPUT_DIR))"
-
-.PHONY: clean build install connect speak test all-snaps all-piper-voices connect-orca-spiel \
+.PHONY: clean build install connect speak test all-snaps connect-orca-spiel \
 	enable-user-daemons \
 	$(SNAPS:%=%-snap) \
 	$(SNAP_NAMES:%=install-%)
@@ -25,22 +21,19 @@ PIPER_VOICES_MAKE := $(MAKE) -C piper-voices SNAP_OUTPUT_DIR="$(abspath $(SNAP_O
 clean:
 	rm -rf "$(SNAP_OUTPUT_DIR)"
 	find . -type f -name '*.snap' -delete
-	$(PIPER_VOICES_MAKE) clean
 
 # Building a snap just involves calling snapcraft pack in the directory
 # containing the snapcraft.yaml file and moving the resulting .snap file to
 # the output directory.
 $(SNAPS:%=%-snap):
 	mkdir -p "$(SNAP_OUTPUT_DIR)"
-	cd "$(subst -snap,,$@)" && snapcraft pack </dev/null && mv *.snap "$(abspath $(SNAP_OUTPUT_DIR))" || exit 1
+	cd "$(subst -snap,,$@)" && snapcraft pack </dev/null && mv *.snap *.comp "$(abspath $(SNAP_OUTPUT_DIR))" || exit 1
 
 all-snaps: $(SNAPS:%=%-snap)
 
-all-piper-voices:
-	$(PIPER_VOICES_MAKE) all-piper-voices
-
-# By default, build all snaps and piper voices.
-build: all-snaps all-piper-voices
+# By default, build all snaps. Piper voice packs are built as components
+# alongside speech-provider-piper, so no separate step is needed for them.
+build: all-snaps
 
 # orca-spiel and spiel-it snaps require --devmode for now.
 $(DEVMODE_SNAP_NAMES:%=install-%):
@@ -55,13 +48,18 @@ enable-user-daemons:
 	sudo snap set system experimental.user-daemons=true
 
 # Install any speech-provider-* snap (e.g. speech-provider-piper, speech-provider-espeak),
-# ensuring the user-daemons feature flag is enabled first.
+# ensuring the user-daemons feature flag is enabled first. Also installs any
+# components (e.g. piper voice packs) built alongside the snap, if present.
 $(SPEECH_PROVIDER_NAMES:%=install-%): install-speech-provider-%:
 	@shopt -s nullglob; \
 	files=("$(SNAP_OUTPUT_DIR)"/speech-provider-$*_*.snap); \
+	components=("$(SNAP_OUTPUT_DIR)"/speech-provider-$*+*.comp); \
 	$(MAKE) enable-user-daemons; \
 	set -x; \
-	sudo snap install --dangerous "$${files[@]}"
+	sudo snap install --dangerous "$${files[@]}"; \
+	if [ "$${#components[@]}" -gt 0 ]; then \
+		sudo snap install --dangerous "$${components[@]}"; \
+	fi
 
 # Install any other top-level snap that doesn't need special handling.
 $(OTHER_SNAP_NAMES:%=install-%):
@@ -71,42 +69,21 @@ $(OTHER_SNAP_NAMES:%=install-%):
 	set -x; \
 	sudo snap install --dangerous "$${files[@]}"
 
-# Piper voice packs (build/install/connect/speak/validate) are handled by
-# piper-voices/Makefile; forward the relevant per-locale and aggregate targets.
-# Note: explicit targets below (e.g. connect-orca-spiel) take precedence over
-# these pattern rules for the same name.
-piper-voices-%:
-	$(PIPER_VOICES_MAKE) $@
-
-install-piper-voices-%:
-	$(PIPER_VOICES_MAKE) $@
-
-connect-%:
-	$(PIPER_VOICES_MAKE) $@
-
-speak-%:
-	$(PIPER_VOICES_MAKE) $@
-
-validate-piper-voice-%:
-	$(PIPER_VOICES_MAKE) $@
-
 install: $(SNAP_NAMES:%=install-%)
-	$(PIPER_VOICES_MAKE) install
 
 connect-speech-provider-espeak:
 	# Connect the speech provider to orca
 	sudo snap connect orca-spiel:speech-provider-espeak speech-provider-espeak:speech-provider
 
 connect-speech-provider-piper:
-	$(PIPER_VOICES_MAKE) connect
 	# Connect the speech provider to orca
 	sudo snap connect orca-spiel:speech-provider-piper speech-provider-piper:speech-provider
 
 connect: $(SPEECH_PROVIDER_NAMES:%=connect-%)
 
-# Speak using all piper voices in the voices.yaml file.
 speak-speech-provider-piper:
-	$(PIPER_VOICES_MAKE) speak
+	# Speak a test phrase with the piper speech provider
+	orca-spiel.spiel -p ai.piper.Speech.Provider "Hello, world!"
 
 speak-speech-provider-espeak:
 	# Speak a test phrase with the espeak speech provider

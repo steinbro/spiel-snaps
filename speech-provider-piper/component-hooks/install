@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+# Target directory inside writable $SNAP_DATA where your app looks for models
+TARGET_DIR="$SNAP_DATA/voices"
+mkdir -p "$TARGET_DIR"
+
+# $SNAP_COMPONENT contains the exact path to this component's active mount
+# Example: /snap/speech-provider-piper/current/components/mnt/voices-en-us-amy-medium/x1
+if [ -n "$SNAP_COMPONENT" ]; then
+    # Remove trailing path (everything after last /) to get parent directory
+    COMPONENT_NAME=${SNAP_COMPONENT%/*}
+    # Remove leading path (everything up to last /) to get directory name only
+    COMPONENT_NAME=${COMPONENT_NAME##*/}
+    # Create symbolic link from component path to target directory
+    ln -sfn "$SNAP_COMPONENT" "$TARGET_DIR/$COMPONENT_NAME"
+fi

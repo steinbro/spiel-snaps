@@ -13,12 +13,6 @@ slots:
     bus: session
     name: ai.piper.Speech.Provider
 
-plugs:
-  piper-voices:
-    interface: content
-    content: piper-voices
-    target: $SNAP/voices
-
 apps:
   speech-provider-piper:
     command: usr/local/bin/speech-provider-piper
@@ -31,7 +25,6 @@ apps:
     plugs:
       - audio-playback
       - pulseaudio  #XXX not necessary?
-      - piper-voices
     slots:
       - speech-provider
 
@@ -73,9 +66,9 @@ parts:
     build-environment:
       - USE_SYSTEM_ESPEAK: "1"
     meson-parameters:
-      # Populated at runtime by content snaps
-      # Must match target in plugs.piper-voices.plug
-      - -Dvoices_dir=/snap/$SNAPCRAFT_PROJECT_NAME/current/voices/
+      # Populated at runtime by voice component install/post-refresh hooks
+      # Must match TARGET_DIR in component-hooks/install and component-hooks/post-refresh
+      - -Dvoices_dir=/var/snap/$SNAPCRAFT_PROJECT_NAME/current/voices/
     override-build: |
       # Some dependencies (e.g. sonata) require a nightly rust toolchain
       export RUSTUP_TOOLCHAIN=nightly-2024-08-15
@@ -86,3 +79,38 @@ parts:
       rustc --version
       cargo --version
       craftctl default
+
+  voices-en-us-amy-medium:
+    plugin: nil
+    source: component-hooks
+    build-packages:
+      - curl
+      - ca-certificates
+    override-build: |
+      set -eu
+      mkdir -p "$CRAFT_PART_INSTALL/en_US-amy-medium"
+      curl -L --fail --retry 3 \
+        -o "$CRAFT_PART_INSTALL/en_US-amy-medium/en_US-amy-medium.onnx" \
+        "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx"
+      curl -L --fail --retry 3 \
+        -o "$CRAFT_PART_INSTALL/en_US-amy-medium/en_US-amy-medium.onnx.json" \
+        "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx.json"
+      mkdir -p "$CRAFT_PART_INSTALL/meta/hooks"
+      cp "$CRAFT_PART_SRC/install" "$CRAFT_PART_INSTALL/meta/hooks/install"
+      cp "$CRAFT_PART_SRC/install" "$CRAFT_PART_INSTALL/meta/hooks/post-refresh"
+      chmod +x "$CRAFT_PART_INSTALL/meta/hooks/install"
+    organize:
+      en_US-amy-medium/en_US-amy-medium.onnx: (component/voices-en-us-amy-medium)/en_US-amy-medium.onnx
+      en_US-amy-medium/en_US-amy-medium.onnx.json: (component/voices-en-us-amy-medium)/en_US-amy-medium.onnx.json
+      meta/hooks/install: (component/voices-en-us-amy-medium)/meta/hooks/install
+      meta/hooks/post-refresh: (component/voices-en-us-amy-medium)/meta/hooks/post-refresh
+
+components:
+  voices-en-us-amy-medium:
+    type: standard
+    summary: US English voice for Piper
+    description: US English voice for Piper
+    version: '0.1'
+    hooks:
+      install: {}
+      post-refresh: {}
