@@ -43,12 +43,13 @@ for locale in "${locales[@]}"; do
     cat <<EOF
 
   ${comp_name}:
-    plugin: nil
-    source: component-hooks
+    plugin: dump
+    source: ./component-base
     build-packages:
       - curl
       - ca-certificates
     override-build: |
+      craftctl default
       set -eu
       mkdir -p "\$CRAFT_PART_INSTALL/${dir_name}"
       curl -L --fail --retry 3 \\
@@ -57,10 +58,6 @@ for locale in "${locales[@]}"; do
       curl -L --fail --retry 3 \\
         -o "\$CRAFT_PART_INSTALL/${dir_name}/${onnx_file}.json" \\
         "${base_url}/${onnx_file}.json"
-      mkdir -p "\$CRAFT_PART_INSTALL/meta/hooks"
-      cp "\$CRAFT_PART_SRC/install" "\$CRAFT_PART_INSTALL/meta/hooks/install"
-      cp "\$CRAFT_PART_SRC/install" "\$CRAFT_PART_INSTALL/meta/hooks/post-refresh"
-      chmod +x "\$CRAFT_PART_INSTALL/meta/hooks/install" "\$CRAFT_PART_INSTALL/meta/hooks/post-refresh"
     organize:
       ${dir_name}/${onnx_file}: (component/${comp_name})/${onnx_file}
       ${dir_name}/${onnx_file}.json: (component/${comp_name})/${onnx_file}.json
