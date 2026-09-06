@@ -102,13 +102,22 @@ connect: $(SPEECH_PROVIDER_NAMES:%=connect-%)
 speak-speech-provider-piper: $(PIPER_VOICES:%=speak-speech-provider-piper-voice-%)
 
 # Speak a locale's test phrase with one specific voice (e.g. en_GB-alan-medium).
+# Times the command and fails if it exits too quickly (<0.1s) to have actually
+# spoken anything, which indicates a silent failure (e.g. bad voice metadata).
 $(PIPER_VOICES:%=speak-speech-provider-piper-voice-%):
 	@voice="$(subst speak-speech-provider-piper-voice-,,$@)"; \
 	locale="$${voice%%-*}"; \
 	locale="$${locale/_/-}"; \
 	phrase="$$(yq -r --arg locale "$$locale" '.[$$locale].test_phrase' speech-provider-piper/voices.yaml)"; \
+	start=$$(date +%s.%N); \
 	set -x; \
-	orca-spiel.spiel -v "$${voice}" "$$phrase";
+	orca-spiel.spiel -v "$${voice}" "$$phrase"; \
+	{ set +x; } 2>/dev/null; \
+	elapsed=$$(echo "$$(date +%s.%N) - $$start" | bc); \
+	if (( $$(echo "$$elapsed < 0.1" | bc -l) )); then \
+		echo "speak-speech-provider-piper-voice-$${voice}: exited after only $${elapsed}s, too fast to have spoken anything" >&2; \
+		exit 1; \
+	fi
 
 speak-speech-provider-espeak:
 	# Speak a test phrase with the espeak speech provider
