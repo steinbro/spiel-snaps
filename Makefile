@@ -15,14 +15,21 @@ OTHER_SNAP_NAMES := $(filter-out $(DEVMODE_SNAP_NAMES) $(SPEECH_PROVIDER_NAMES),
 # Locales (e.g. en-GB) for which voices will be packaged as components.
 PIPER_LOCALES := $(shell yq -r 'keys_unsorted[]' speech-provider-piper/voices.yaml)
 
-.PHONY: clean build install connect speak test all-snaps connect-orca-spiel \
+.PHONY: clean clean-snaps build install connect speak test all-snaps connect-orca-spiel \
 	enable-user-daemons \
 	$(SNAPS:%=%-snap) \
+	$(SNAPS:%=%-clean) \
 	$(SNAP_NAMES:%=install-%)
 
-clean:
+clean: clean-snaps
 	rm -rf "$(SNAP_OUTPUT_DIR)"
 	find . -type f -name '*.snap' -delete
+
+# Runs snapcraft clean in each directory containing a snapcraft.yaml file.
+$(SNAPS:%=%-clean):
+	cd "$(subst -clean,,$@)" && snapcraft clean
+
+clean-snaps: $(SNAPS:%=%-clean)
 
 # speech-provider-piper's snapcraft.yaml is generated: it bundles one voice
 # component per voice listed in voices.yaml, appended to the static template.
