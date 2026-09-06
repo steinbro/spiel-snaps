@@ -10,10 +10,9 @@ There are snap configurations for:
 
 ## Usage
 
-Build and install spiel-enabled orca, the piper speech provider, and a voice pack, and play some audio to test:
+Build and install spiel-enabled orca and the piper speech provider (which bundles its voices as snap components), and play some audio to test:
 ```bash
 make SNAPS="speech-provider-piper orca-spiel" \
-  PIPER_VOICES=en-GB \
   build install connect speak
 ```
 
@@ -30,21 +29,13 @@ NAME                           IDENTIFIER
 Piper                          ai.piper.Speech.Provider
 ```
 ### Installing a packaged voice
-To install a new piper voice, you will need to install the content snap, connect it to the speech provider, and restart the speech provider service.
+Each voice is packaged as a snap component bundled with speech-provider-piper. To install one, install it alongside (or after) the main snap:
 ```bash
-$ sudo snap install --dangerous ./output/snaps/piper-voices-es-mx.snap
-$ sudo snap connect speech-provider-piper:piper-voices piper-voices-es-mx:piper-voices
-$ sudo snap restart speech-provider-piper.speech-provider-piper
+$ sudo snap install --dangerous ./output/snaps/speech-provider-piper_0.1_amd64.snap
+$ sudo snap install --dangerous ./output/snaps/speech-provider-piper+voices-es-mx-claude-high_0.1.comp
 ```
 ### Packaging a new voice
-Creating a snap for a new voice involves simply editing the voices.yaml file in the piper-voices directory. The following make targets will automatically become available upon making changes to that file (using en-US as an example locale):
-```bash
-make piper-voices-en-US  # Build the snap
-make install-piper-voices-en-US
-make connect-en-US       # Connect the snap to the Piper speech provider
-make speak-en-US         # Speak a test phrase
-make validate-en-US      # Install, connect, and try speaking with all voices for the locale
-```
+Adding a new voice involves simply editing the voices.yaml file in the speech-provider-piper directory. speech-provider-piper/snapcraft.yaml is generated from snapcraft.yaml.in and voices.yaml by generate_snapcraft.sh, and is regenerated automatically as part of `make build`/`make speech-provider-piper-snap` whenever either input file changes.
 
 ## Testing
 
@@ -56,4 +47,4 @@ The snap structure closely follows the intended architecture of Spiel services.
 
 Each speech provider runs in its own strictly-confined snap, and exposes a D-Bus service for communication. Spiel client apps like orca can find speech providers and voices through D-Bus service discovery. Speech providers are automatically started via D-Bus service activation.
 
-Voices are downloaded from the [rhaspy/piper-voices repo](https://huggingface.co/rhasspy/piper-voices) on Hugging Face. They are packaged per-locale as their own snaps, connected through a content interface.
+Voices are downloaded from the [rhaspy/piper-voices repo](https://huggingface.co/rhasspy/piper-voices) on Hugging Face. Each voice is packaged as its own snap component bundled with speech-provider-piper, and can be selectively installed.
