@@ -8,6 +8,22 @@
 # Browse and listen to voice samples at
 # https://rhasspy.github.io/piper-samples/
 #
+cs-CZ:
+  test_phrase: Příliš žluťoučký kůň úpěl ďábelské ódy.
+  voices:
+    - jirka-medium
+da-DK:
+  test_phrase: Quizdeltagerne spiste jordbær med fløde, mens cirkusklovnen Walther spillede på xylofon.
+  voices:
+    - talesyntese-medium
+de-DE:
+  test_phrase: Zwölf Boxkämpfer jagen Viktor quer über den großen Sylter Deich.
+  voices:
+    - thorsten-medium
+el-GR:
+  test_phrase: Ξεσκεπάζω την ψυχοφθόρα βδελυγμία.
+  voices:
+    - joy-medium
 en-GB:
   test_phrase: The quick brown fox jumps over the lazy dog.
   voices:
@@ -24,7 +40,61 @@ es-MX:
   test_phrase: El veloz murciélago hindú comía feliz cardillo y kiwi.
   voices:
     - claude-high
+fi-FI:
+  test_phrase: Albert osti fagotin ja töräytti puhkuvan melodian.
+  voices:
+    - harri-medium
+fr-FR:
+  test_phrase: Portez ce vieux whisky au juge blond qui fume.
+  voices:
+    - siwis-medium
+hu-HU:
+  test_phrase: Jó foxim és don Quijote húszwattos lámpánál ülve egy pár bűvös cipőt készít.
+  voices:
+    - anna-medium
+it-IT:
+  test_phrase: Ma la volpe, col suo balzo, ha raggiunto il quieto Fido.
+  voices:
+    - paola-medium
+#FIXME does not work
+#ja-JA:
+#  test_phrase: いろはにほへと ちりぬるを わかよたれそ つねならむ うゐのおくやま けふこえて あさきゆめみし ゑひもせすん
+#  voices:
+#    - hi_fi_captain-medium
+#ko-KR:
+#  test_phrase: 다람쥐 헌 쳇바퀴에 타고파
+#  voices:
+#    - kss-medium
+#nl-NL:
+#  test_phrase: Pa's wijze lynx bezag vroom het fikse aquaduct.
+#  voices:
+#    - pim-medium
+no-NO:
+  test_phrase: Vår sære Zulu fra badeøya spilte jazz og quickstep i min taxi.
+  voices:
+    - talesyntese-medium
+pl-PL:
+  test_phrase: Pchnąć w tę łódź jeża lub ośm skrzyń fig.
+  voices:
+    - gosia-medium
+#FIXME does not work
+#pt-BR:
+#  test_phrase: Um pequeno jabuti xereta viu dez cegonhas felizes.
+#  voices:
+#    - faber-medium
 ro-RO:
   test_phrase: Muzicologă în bej vând whisky și tequila, preț fix.
   voices:
     - mihai-medium
+ru-RU:
+  test_phrase: Съешь же ещё этих мягких французских булок, да выпей чаю.
+  voices:
+    - irina-medium
+sv-SE:
+  test_phrase: Flygande bäckasiner söka hwila på mjuka tuvor.
+  voices:
+    - nst-medium
+tr-TR:
+  test_phrase: Pijamalı hasta yağız şoföre çabucak güvendi.
+  voices:
+    - dfki-medium
