@@ -1,5 +1,9 @@
 # Snaps for Spiel speech providers and voices
 
+> **⚠️ This project has moved to [github.com/project-spiel/snaps](https://github.com/project-spiel/snaps).**
+>
+> This repository is no longer maintained here. Please use the new location for the latest code, issues, and pull requests.
+
 This repository contains configuration and tests for packaging the [Spiel](https://project-spiel.org/) text-to-speech interface as snap packages.
 
 There are snap configurations for:
